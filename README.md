@@ -9,7 +9,7 @@ A React Native (Expo) mobile application designed to help users intelligently or
 
 </div>
 
-## � Feature Showcase
+## 📸 Feature Showcase
 
 ### 1. Smart Dashboard & Revision Feed
 The central hub of the application. The **revision feed** intelligently surfaces note blocks that require attention. Using a liquid-glass aesthetic, the UI provides a distraction-free environment for focus.
