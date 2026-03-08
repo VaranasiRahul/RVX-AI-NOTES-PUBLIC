@@ -53,7 +53,6 @@ Stay consistent with **Daily Streaks** and progress tracking. The **Advanced Set
 **Edge AI Engine:**
 - **Custom Hybrid Summarizer**: Proprietary implementation of LexRank, TextRank, and BM25 for offline text analysis.
 - **ONNX Runtime**: High-performance on-device model execution for `MiniLM` embeddings.
-- **Gemini 1.5/2.0**: Optional cloud-scale LLM analysis for deep multi-document synthesis.
 
 **Persistence:**
 - **Drizzle ORM**: Type-safe local SQLite interactions.
@@ -72,41 +71,6 @@ The application follows an **Offline-First Edge-AI architecture**. All critical 
 1. **Privacy**: User notes are deeply personal. Processing them locally ensures no private text is transmitted over the network.
 2. **Speed & Availability**: Instant topic extractions and summaries regardless of network connectivity.
 3. **Cost Efficiency**: Eliminates the need for expensive cloud inference APIs.
-
----
-
-### High-Level AI & System Flow
-
-The application utilizes a multi-layered AI pipeline that transitions from structural parsing to semantic analysis and redundant-aware summarization.
-
-```mermaid
-graph TD
-    Input[Raw Markdown Content] --> Parser[Structural Parser]
-    
-    subgraph Chunking_Layer [Segmentation]
-        Parser --> Structural[Structural Boundary Detection]
-        Structural --> Semantic[ONNX Semantic Valley Detection]
-    end
-    
-    Semantic --> Blocks[Topic Blocks]
-    
-    subgraph Intelligence_Layer [Fused Scoring Pipeline]
-        Blocks --> TFIDF[TF-IDF / Graph Centrality]
-        TFIDF --> Formula["Relevance Score (S) = 0.30·LexRank + 0.22·BM25 + 0.18·TextRank + 0.18·LSA + 0.12·Structural"]
-        Formula --> FusedScore[Fused Relevance Scoring]
-    end
-    
-    subgraph Optimization_Layer [Selection]
-        FusedScore --> MMR[MMR: Redundancy Reduction]
-        MMR --> Extract[Key Terms & Code Scoring]
-    end
-    
-    Extract --> Final[Structured Revision Block]
-
-    %% Main System Connections
-    Final --> Drizzle[Drizzle ORM / SQLite]
-    Final --> Widget[Android Home Screen Widget]
-```
 
 ---
 
@@ -174,8 +138,6 @@ graph TD
 
 **2. On-Device AI Engine (`lib/localSummarizer.ts`, `lib/onnxEmbeddings.ts`)**
 - Instead of relying on heavy high-level libraries, the app uses a **custom statistical/graph-based hybrid summarizer** for zero-latency text processing.
-- **Fused Scoring Agency**: Every sentence is ranked using a weighted linear combination of five signals:
-  - **S = 0.30·LexRank + 0.22·BM25 + 0.18·TextRank + 0.18·LSA + 0.12·Structural**
 - **ONNX Runtime** executes quantized `all-MiniLM-L6-v2` transformer models for embeddings, which are used to analyze long notes, cluster them into "Topics", and detect semantic boundaries.
 
 **3. Data Flow & Persistence (`lib/persistentStore.ts`)**
