@@ -3,7 +3,7 @@
 # Daily Revision Hub
 **AI-Powered Offline-First Study & Revision Application**
 
-A React Native (Expo) mobile application designed to help users intelligently organize, summarize, and revise their notes using on-device Machine Learning (HuggingFace Transformers, ONNX) prioritizing privacy and speed.
+A React Native (Expo) mobile application built to solve the friction of manual revision by pushing AI models directly to the edge. Using on-device Machine Learning (HuggingFace Transformers, ONNX), it provides intelligent, adaptive study aids with **100% privacy** and **offline availability**.
 
 *Note: This repository serves as a portfolio demonstration and architectural overview. The full source code is maintained in a private repository.*
 
@@ -153,8 +153,7 @@ graph TD
 - Supports tap-to-deep-link targeting specific folders within the Expo app.
 
 
-## 💡 Why This Project?
-Built to solve the friction of manual revision, this app pushes AI models directly to the edge. It ensures **100% privacy** and **offline availability** while providing intelligent, adaptive study aids.
+
 
 ## 🔗 Contact & Links
 - **LinkedIn**: [https://www.linkedin.com/in/varanasirahul/](https://www.linkedin.com/in/varanasirahul/)
