@@ -75,7 +75,7 @@ The application follows an **Offline-First Edge-AI architecture**. All critical 
 
 ---
 
-### High-Level AI & System Architecture
+### High-Level AI & System Flow
 
 The application utilizes a multi-layered AI pipeline that transitions from structural parsing to semantic analysis and redundant-aware summarization.
 
@@ -92,10 +92,8 @@ graph TD
     
     subgraph Intelligence_Layer [Fused Scoring Pipeline]
         Blocks --> TFIDF[TF-IDF / Graph Centrality]
-        TFIDF --> Graph[LexRank & TextRank: Graph Centrality]
-        TFIDF --> BM25[BM25: Keyword Density]
-        TFIDF --> LSA[LSA: Singular Value Decomposition]
-        Graph & BM25 & LSA --> FusedScore[Fused Relevance Scoring]
+        TFIDF --> Formula["Relevance Score (S) = 0.30·LexRank + 0.22·BM25 + 0.18·TextRank + 0.18·LSA + 0.12·Structural"]
+        Formula --> FusedScore[Fused Relevance Scoring]
     end
     
     subgraph Optimization_Layer [Selection]
@@ -108,26 +106,64 @@ graph TD
     %% Main System Connections
     Final --> Drizzle[Drizzle ORM / SQLite]
     Final --> Widget[Android Home Screen Widget]
-    
-    subgraph App_Core [Logic & State]
-        Router[Expo Router]
-        ReactQuery[React Query / Caching]
-        Context[Notes Context]
-    end
-    
-    Router --> Final
-    ReactQuery --> Drizzle
 ```
 
 ---
 
-### ⚛️ The AI Engine: Fused Relevance Scoring
+### High-Level System Diagram
 
-Each sentence in a document is assigned a **Relevance Score** ($S$) calculated as a weighted linear combination of five distinct signals:
+```mermaid
+graph TD
+    subgraph UI Layer [UI & Presentation Layer]
+        Router[Expo Router]
+        Screens[Screens: Home, Stories, Notes]
+        Gestures[Reanimated UI / Glassmorphism]
+    end
 
-$$S = 0.30 \cdot LexRank + 0.22 \cdot BM25 + 0.18 \cdot TextRank + 0.18 \cdot LSA + 0.12 \cdot Structural$$
+    subgraph Logic Layer [Business Logic & State]
+        ReactQuery[React Query / Caching]
+        Context[Notes Context]
+        Parser[Smart Topic Parser]
+    end
 
-This multi-signal approach ensures that the most "central" and semantically significant sentences are surfaced for revision while maintaining structural context.
+    subgraph Local AI Engine [On-Device ML Layer]
+        HF[HuggingFace Transformers]
+        ONNX[ONNX Runtime React Native]
+        Summarizer[Local Text Summarizer]
+        Embeddings[Vector Embeddings Generator]
+    end
+
+    subgraph Data Access Layer [Storage Layer]
+        Drizzle[Drizzle ORM]
+        SQLite[(Local SQLite DB)]
+        FileSystem[Expo FileSystem.documentDirectory]
+    end
+
+    subgraph Native Integrations
+        Widget[Android Home Screen Widget]
+        Notifications[Local Notifications]
+    end
+
+    %% Connections
+    Router --> Screens
+    Screens --> ReactQuery
+    Screens --> Context
+    
+    Context --> Parser
+    Parser <--> Summarizer
+    Parser <--> Embeddings
+    
+    Summarizer --> HF
+    Embeddings --> ONNX
+    
+    ReactQuery --> Drizzle
+    Drizzle --> SQLite
+    
+    Context --> FileSystem
+    
+    Widget -.-> Filesystem/SQLite
+    Notifications --> Widget
+```
 
 ### Component Deep Dive
 
