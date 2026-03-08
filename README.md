@@ -9,7 +9,7 @@ A React Native (Expo) mobile application built to solve the friction of manual r
 
 </div>
 
-## ✨ Feature Showcase
+## Feature Overview
 
 ### 1. Smart Dashboard & Revision Feed
 The central hub of the application. The **revision feed** intelligently surfaces note blocks that require attention. Using a liquid-glass aesthetic, the UI provides a distraction-free environment for focus.
@@ -45,7 +45,7 @@ Stay consistent with **Daily Streaks** and progress tracking. The **Advanced Set
 
 ---
 
-## 🛠 Tech Stack
+## Technical Specifications
 **Frontend (Mobile):**
 - **React Native & Expo**: File-based routing with Expo Router.
 - **Reanimated & Glassmorphism**: High-performance 60fps gestures and premium UI blurs.
@@ -60,7 +60,7 @@ Stay consistent with **Daily Streaks** and progress tracking. The **Advanced Set
 
 ---
 
-## 🧠 System Architecture
+## Architectural Design
 
 This section provides a high-level overview of the architectural design decisions and data flows powering the **Daily Revision Hub**.
 
@@ -153,7 +153,7 @@ graph TD
 
 
 
-## 🔗 Contact & Links
+## Contact Information
 - **LinkedIn**: [https://www.linkedin.com/in/varanasirahul/](https://www.linkedin.com/in/varanasirahul/)
 
 
