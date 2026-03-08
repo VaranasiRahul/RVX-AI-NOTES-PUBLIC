@@ -9,63 +9,63 @@ A React Native (Expo) mobile application designed to help users intelligently or
 
 </div>
 
-## 📸 Screenshots & Demo
+## � Feature Showcase
 
+### 1. Smart Dashboard & Revision Feed
+The central hub of the application. The **revision feed** intelligently surfaces note blocks that require attention. Using a liquid-glass aesthetic, the UI provides a distraction-free environment for focus.
 <p align="center">
-  <img src="assets/home_feed.png" height="400" />
-  <img src="assets/ai_feed.png" height="400" />
-  <img src="assets/ai_summary.png" height="400" />
-  <img src="assets/folder_org.png" height="400" />
-</p>
-<p align="center">
-  <b>Dashboard & AI Summarization Flow</b>
+  <img src="assets/home_feed.png" height="450" />
 </p>
 
+### 2. On-Device AI Summarization
+Experience zero-latency AI. Leveraging **HuggingFace Transformers** and **ONNX Runtime**, the app processes your raw notes locally to generate concise, actionable study blocks.
 <p align="center">
-  <img src="assets/topic_view.png" height="400" />
-  <img src="assets/note_detail.png" height="400" />
-  <img src="assets/streak.png" height="400" />
-  <img src="assets/settings.png" height="400" />
+  <img src="assets/ai_feed.png" height="450" />
+  <img src="assets/ai_summary.png" height="450" />
 </p>
+
+### 3. Intelligent Organization & Topic Analysis
+The app doesn't just store notes; it understands them. It automatically categorizes content into **Folders** and performs **Topic Analysis** to cluster related concepts together for deeper context.
 <p align="center">
-  <b>Topic Analysis, Detailed Notes, Streak Tracking & Settings</b>
+  <img src="assets/folder_org.png" height="450" />
+  <img src="assets/topic_view.png" height="450" />
+</p>
+
+### 4. Focused Note Revision
+Every generated block allows for deep dives. The **Note View** renders complex Markdown and allows users to jump back into the full context of their original documents instantly.
+<p align="center">
+  <img src="assets/note_detail.png" height="450" />
+</p>
+
+### 5. Habit Building & Personalization
+Stay consistent with **Daily Streaks** and progress tracking. The **Advanced Settings** enable deep customization of the on-device AI models, UI theme (Midnight Glass, etc.), and local data management.
+<p align="center">
+  <img src="assets/streak.png" height="450" />
+  <img src="assets/settings.png" height="450" />
 </p>
 
 ---
 
-## ✨ Key Features
-- **On-Device AI Summarization**: Uses local ONNX models and `@huggingface/transformers` to generate document summaries without sending sensitive data to the cloud.
-- **Smart Topic Extraction**: Automatically categorizes notes and extracts key topics for faster revision and folder organization.
-- **Offline-First Architecture**: Features a robust local SQLite database using Drizzle ORM, ensuring all data is available without an active internet connection.
-- **Persistence & Streaks**: Intelligent streak tracking and habit-building logic to encourage consistent daily revision.
-- **Advanced Customization**: Comprehensive settings for AI model preferences, UI themes, and privacy-centric data management.
-- **Story Mode**: A modern, immersive vertical-scrolling interface for reviewing saved note blocks (similar to social media stories).
-- **Glassmorphism UI**: Premium visual aesthetics featuring liquid-glass navigation elements, dynamic blurs, and smooth Reanimated gestures.
-
 ## 🛠 Tech Stack
 **Frontend (Mobile):**
-- React Native & Expo (Expo Router for navigation)
-- React Native Reanimated (Complex gesture and UI animations)
-- Glass Effect & Blur (Liquid UI aesthetic)
+- **React Native & Expo**: File-based routing with Expo Router.
+- **Reanimated & Glassmorphism**: High-performance 60fps gestures and premium UI blurs.
 
-**Local AI & Data Processing:**
-- HuggingFace Transformers (`@huggingface/transformers`)
-- ONNX Runtime (`onnxruntime-react-native`) for local embeddings & models
+**Edge AI Engine:**
+- **@huggingface/transformers**: Local NLP processing.
+- **ONNX Runtime**: Efficient on-device model execution.
 
-**Database & State:**
-- Drizzle ORM (Local SQLite + server-side PostgreSQL integration capabilities)
-- React Query (Data fetching, caching, and synchronization)
-- Expo FileSystem (Persistent local document storage)
+**Persistence:**
+- **Drizzle ORM**: Type-safe local SQLite interactions.
+- **React Query**: Robust server-state and cache management.
 
-**Native Integrations:**
-- React Native Android Widget (Kotlin/Java bridged widgets)
-- Expo Location & Notifications
+---
 
 ## 🧠 System Architecture
 To understand how the local AI interacts with the persistent storage and UI layer, please see the [Architecture Documentation](./ARCHITECTURE.md).
 
 ## 💡 Why This Project?
-This project was built to solve the pain point of scattered study notes and the friction of manually reviewing them. By pushing AI models directly to the edge (the mobile device), it ensures **zero latency** and **100% privacy** while providing intelligent, adaptive study aids.
+Built to solve the friction of manual revision, this app pushes AI models directly to the edge. It ensures **100% privacy** and **offline availability** while providing intelligent, adaptive study aids.
 
 ## 🔗 Contact & Links
 - **LinkedIn**: [Your LinkedIn URL]
@@ -73,3 +73,4 @@ This project was built to solve the pain point of scattered study notes and the 
 
 ---
 *Created by [Your Name]*
+
