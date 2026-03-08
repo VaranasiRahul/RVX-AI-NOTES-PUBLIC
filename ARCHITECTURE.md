@@ -29,10 +29,9 @@ graph TD
     end
 
     subgraph Local AI Engine [On-Device ML Layer]
-        HF[HuggingFace Transformers]
         ONNX[ONNX Runtime React Native]
-        Summarizer[Local Text Summarizer]
-        Embeddings[Vector Embeddings Generator]
+        Summarizer[Custom Hybrid Summarizer]
+        Embeddings[ONNX Embeddings Generator]
     end
 
     subgraph Data Access Layer [Storage Layer]
@@ -55,7 +54,7 @@ graph TD
     Parser <--> Summarizer
     Parser <--> Embeddings
     
-    Summarizer --> HF
+    Summarizer --> ONNX
     Embeddings --> ONNX
     
     ReactQuery --> Drizzle
@@ -75,9 +74,9 @@ graph TD
 - Styled using custom glassmorphism components (`expo-blur`, `expo-glass-effect`) to give a modern, premium feel.
 
 ### 2. On-Device AI Engine (`lib/localSummarizer.ts`, `lib/onnxEmbeddings.ts`)
-- Instead of calling OpenAI/Anthropic APIs, the app loads quantized lightweight transformer models via `@huggingface/transformers` directly into the device memory.
-- `ONNX Runtime` executes these models efficiently using mobile CPU/NPU acceleration.
-- Used for analyzing long notes, clustering them into "Topics", and summarizing complex paragraphs into bite-sized "Study Blocks".
+- Instead of relying on external cloud APIs or high-level transformer libraries, the app uses a **custom statistical/graph-based hybrid summarizer** for zero-latency processing.
+- **ONNX Runtime** executes quantized `MiniLM` models directly on the device CPU/NPU.
+- These local models are used to analyze long notes, cluster them into "Topics", and detect semantic boundaries for revision blocks.
 
 ### 3. Data Flow & Persistence (`lib/persistentStore.ts`)
 - **Drizzle ORM** manages the local SQLite tables with strict TypeScript schemas.

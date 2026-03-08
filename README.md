@@ -3,7 +3,7 @@
 # Daily Revision Hub
 **AI-Powered Offline-First Study & Revision Application**
 
-A React Native (Expo) mobile application built to solve the friction of manual revision by pushing AI models directly to the edge. Using on-device Machine Learning (HuggingFace Transformers, ONNX), it provides intelligent, adaptive study aids with **100% privacy** and **offline availability**.
+A React Native (Expo) mobile application built to solve the friction of manual revision by pushing AI models directly to the edge. Using a **custom hybrid summarizer** and **ONNX Runtime**, it provides intelligent, adaptive study aids with **100% privacy** and **offline availability**.
 
 *Note: This repository serves as a portfolio demonstration and architectural overview. The full source code is maintained in a private repository.*
 
@@ -17,8 +17,7 @@ The central hub of the application. The **revision feed** intelligently surfaces
   <img src="assets/home_feed.png" height="450" />
 </p>
 
-### 2. On-Device AI Summarization
-Experience zero-latency AI. Leveraging **HuggingFace Transformers** and **ONNX Runtime**, the app processes your raw notes locally to generate concise, actionable study blocks.
+Experience zero-latency AI. Utilizing a **proprietary hybrid summarizer** (BM25, LexRank, MMR) and **ONNX-driven embeddings**, the app processes your raw notes locally to generate concise, actionable study blocks.
 <p align="center">
   <img src="assets/ai_feed.png" height="450" />
   <img src="assets/ai_summary.png" height="450" />
@@ -52,8 +51,8 @@ Stay consistent with **Daily Streaks** and progress tracking. The **Advanced Set
 - **Reanimated & Glassmorphism**: High-performance 60fps gestures and premium UI blurs.
 
 **Edge AI Engine:**
-- **@huggingface/transformers**: Local NLP processing.
-- **ONNX Runtime**: Efficient on-device model execution.
+- **Custom Hybrid Summarizer**: Proprietary implementation of LexRank, TextRank, and BM25 for offline text analysis.
+- **ONNX Runtime**: High-performance on-device model execution for `MiniLM` embeddings.
 
 **Persistence:**
 - **Drizzle ORM**: Type-safe local SQLite interactions.
@@ -138,9 +137,8 @@ graph TD
 - Styled using custom glassmorphism components (`expo-blur`, `expo-glass-effect`) to give a modern, premium feel.
 
 **2. On-Device AI Engine (`lib/localSummarizer.ts`, `lib/onnxEmbeddings.ts`)**
-- Instead of calling OpenAI/Anthropic APIs, the app loads quantized lightweight transformer models via `@huggingface/transformers` directly into the device memory.
-- `ONNX Runtime` executes these models efficiently using mobile CPU/NPU acceleration.
-- Used for analyzing long notes, clustering them into "Topics", and summarizing complex paragraphs into bite-sized "Study Blocks".
+- Instead of relying on heavy high-level libraries, the app uses a **custom statistical/graph-based hybrid summarizer** for zero-latency text processing.
+- **ONNX Runtime** executes quantized `all-MiniLM-L6-v2` transformer models for embeddings, which are used to analyze long notes, cluster them into "Topics", and detect semantic boundaries.
 
 **3. Data Flow & Persistence (`lib/persistentStore.ts`)**
 - **Drizzle ORM** manages the local SQLite tables with strict TypeScript schemas.
