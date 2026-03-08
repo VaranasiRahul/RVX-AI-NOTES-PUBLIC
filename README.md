@@ -11,11 +11,13 @@ A React Native (Expo) mobile application designed to help users intelligently or
 
 ## 📸 Screenshots & Demo
 
-| Home Feed | AI Summary | Folder Organization | 
+| Home Feed | AI Feed | AI Detail |
 | :---: | :---: | :---: |
-| ![Home](assets/home_feed.png) | ![Summary](assets/ai_summary.png) | ![Folders](assets/folder_org.png) |
-| **Topic Detail** | **Note View** | **Settings & Privacy** |
-| ![Topics](assets/topic_view.png) | ![Note](assets/note_detail.png) | ![Settings](assets/settings.png) |
+| ![Home](assets/home_feed.png) | ![AI Feed](assets/ai_feed.png) | ![AI Detail](assets/ai_summary.png) |
+| **Folder Organization** | **Topic Detail** | **Note View** |
+| ![Folders](assets/folder_org.png) | ![Topics](assets/topic_view.png) | ![Note](assets/note_detail.png) |
+| **Settings & Privacy** | | |
+| ![Settings](assets/settings.png) | | |
 
 ---
 

@@ -9,7 +9,8 @@
      - Screenshot 3 -> `folder_org.png`
      - Screenshot 4 -> `topic_view.png`
      - Screenshot 5 -> `home_feed.png`
-     - Screenshot 6 (Settings) -> `settings.png`
+     - Screenshot 6 -> `settings.png`
+     - New AI Feed Screenshot -> `ai_feed.png`
 3. **Initialize Git**:
    ```bash
    cd /path/to/your/new/public-demo-repo
