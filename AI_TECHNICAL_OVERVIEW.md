@@ -116,7 +116,53 @@ When a Gemini API key is provided, the app can offload complex analysis:
 
 ---
 
-## 6. Technical Performance Metrics
+---
+
+## 6. Spaced Repetition Engine: SM-2 Implementation
+
+The "Revision" aspect of the Hub is powered by a custom implementation of the **SuperMemo-2 (SM-2) algorithm**. This governs the adaptive scheduling of revision cards based on user performance.
+
+### The SM-2 Formula
+For every topic card, the system maintains three variables:
+- **Interval ($I$)**: Days until the next revision.
+- **Ease Factor ($EF$)**: Complexity multiplier (default 2.5).
+- **Review Count ($n$)**: Number of successful revisions.
+
+When a user rates a card, the system updates these values:
+
+$$EF' = \max(1.3, EF + (0.1 - (5 - q) \cdot (0.08 + (5 - q) \cdot 0.02)))$$
+*(Simplified in implementation for mobile performance using discrete rating boosts)*
+
+- **Interval progression**:
+  - $I(1) = 1$
+  - $I(2) = 6$ (or $3$ in our mobile-optimized variant)
+  - $I(n) = I(n-1) \cdot EF$
+
+This ensures that cards the user finds "Hard" appear more frequently, while "Easy" concepts are pushed significantly into the future, optimizing long-term retention.
+
+---
+
+## 7. Data Persistence & Integrity
+
+To ensure zero-data-loss even during complex AI analysis, the app uses a **Dual-Storage Source-of-Truth** strategy:
+
+1.  **FileSystem Source (Primary)**: AI-generated artifacts, summaries, and full note content are stored as JSON files in `FileSystem.documentDirectory`. This avoids the 2MB-6MB limits of `AsyncStorage` and prevents JSON parse hangs.
+2.  **Metadata Cache (Secondary)**: Fast-access metadata (streaks, theme settings) is mirrored in `AsyncStorage` for instant UI hydration on startup.
+3.  **Atomic Updates**: Every AI extraction result is hashed (DJB2) and checked against the cache before committing to the disk, preventing redundant compute.
+
+---
+
+## 8. Intelligent Feed Orchestration
+
+Beyond raw extraction, the app uses a **Prioritized Interleaving** logic to maximize retention in the home feed:
+
+-   **Priority Weighting**: Topics rated as "Hard" are given a 3x higher appearance frequency.
+-   **Interleaving Algorithm**: The feed engine interleaves 1 "Hard" topic for every 2 "Regular/Due" topics using a randomized pointer-sliding approach. This prevents the user from being overwhelmed by difficult content while ensuring it remains top-of-mind.
+-   **AI Summarize Mode**: A global state toggle that switches the entire feed from "Reading Mode" (full block content) to "Digestion Mode" (AI summaries). This uses the secondary summarization pipeline to allow quick scanning of thousands of words in seconds.
+
+---
+
+## 9. Technical Performance Metrics
 
 - **Startup Latency**: < 100ms for structural parsing.
 - **Local Summarization**: ~300-800ms for a 1,000-word document.
