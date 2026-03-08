@@ -10,6 +10,7 @@
      - Screenshot 4 -> `topic_view.png`
      - Screenshot 5 -> `home_feed.png`
      - Screenshot 6 -> `settings.png`
+     - Screenshot 7 (Streak) -> `streak.png`
      - New AI Feed Screenshot -> `ai_feed.png`
 3. **Initialize Git**:
    ```bash

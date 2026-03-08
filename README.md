@@ -11,13 +11,11 @@ A React Native (Expo) mobile application designed to help users intelligently or
 
 ## 📸 Screenshots & Demo
 
-| Home Feed | AI Feed | AI Detail |
-| :---: | :---: | :---: |
-| ![Home](assets/home_feed.png) | ![AI Feed](assets/ai_feed.png) | ![AI Detail](assets/ai_summary.png) |
-| **Folder Organization** | **Topic Detail** | **Note View** |
-| ![Folders](assets/folder_org.png) | ![Topics](assets/topic_view.png) | ![Note](assets/note_detail.png) |
-| **Settings & Privacy** | | |
-| ![Settings](assets/settings.png) | | |
+| Dashboard | AI Feed | AI Detail | Folder Org |
+| :---: | :---: | :---: | :---: |
+| <img src="assets/home_feed.png" height="350"> | <img src="assets/ai_feed.png" height="350"> | <img src="assets/ai_summary.png" height="350"> | <img src="assets/folder_org.png" height="350"> |
+| **Topic List** | **Note View** | **Streak Tracking** | **Settings** |
+| <img src="assets/topic_view.png" height="350"> | <img src="assets/note_detail.png" height="350"> | <img src="assets/streak.png" height="350"> | <img src="assets/settings.png" height="350"> |
 
 ---
 
