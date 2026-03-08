@@ -158,7 +158,7 @@ Built to solve the friction of manual revision, this app pushes AI models direct
 
 ## 🔗 Contact & Links
 - **LinkedIn**: [https://www.linkedin.com/in/varanasirahul/](https://www.linkedin.com/in/varanasirahul/)
-- **Portfolio**: [Your Portfolio URL]
+
 
 ---
 *Created by Rahul Varanasi*
