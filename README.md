@@ -1,6 +1,6 @@
 <div align="center">
 
-# Daily Revision Hub
+# RVX AI NOTES
 **AI-Powered Offline-First Study & Revision Application**
 
 A React Native (Expo) mobile application built to solve the friction of manual revision by pushing AI models directly to the edge. Using a **custom hybrid summarizer** and **ONNX Runtime**, it provides intelligent, adaptive study aids with **100% privacy** and **offline availability**.
@@ -62,7 +62,7 @@ Stay consistent with **Daily Streaks** and progress tracking. The **Advanced Set
 
 ## Architectural Design
 
-This section provides a high-level overview of the architectural design decisions and data flows powering the **Daily Revision Hub**.
+This section provides a high-level overview of the architectural design decisions and data flows powering the **RVX AI NOTES**.
 
 ### Core Architecture Philosophy
 The application follows an **Offline-First Edge-AI architecture**. All critical data processing, including natural language processing, embeddings generation, and database queries, happen directly on the user's device. 

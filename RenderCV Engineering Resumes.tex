@@ -1,0 +1,371 @@
+\documentclass[10pt, letterpaper]{article}
+
+% Packages:
+\usepackage[
+    ignoreheadfoot, % set margins without considering header and footer
+    top=2 cm, % seperation between body and page edge from the top
+    bottom=2 cm, % seperation between body and page edge from the bottom
+    left=2 cm, % seperation between body and page edge from the left
+    right=2 cm, % seperation between body and page edge from the right
+    footskip=1.0 cm, % seperation between body and footer
+    % showframe % for debugging
+]{geometry} % for adjusting page geometry
+\usepackage{titlesec} % for customizing section titles
+\usepackage{tabularx} % for making tables with fixed width columns
+\usepackage{array} % tabularx requires this
+\usepackage[dvipsnames]{xcolor} % for coloring text
+\definecolor{primaryColor}{RGB}{0, 0, 0} % define primary color
+\usepackage{enumitem} % for customizing lists
+\usepackage{fontawesome5} % for using icons
+\usepackage{amsmath} % for math
+\usepackage{graphicx} % Required for inserting images
+\usepackage[
+    pdftitle={Rahul Varanasi's CV},
+    pdfauthor={Rahul Varanasi},
+    pdfcreator={LaTeX with RenderCV},
+    colorlinks=true,
+    urlcolor=primaryColor
+]{hyperref} % for links, metadata and bookmarks
+\usepackage[pscoord]{eso-pic} % for floating text on the page
+\usepackage{calc} % for calculating lengths
+\usepackage{bookmark} % for bookmarks
+\usepackage{lastpage} % for getting the total number of pages
+\usepackage{changepage} % for one column entries (adjustwidth environment)
+\usepackage{paracol} % for two and three column entries
+\usepackage{ifthen} % for conditional statements
+\usepackage{needspace} % for avoiding page break right after the section title
+\usepackage{iftex} % check if engine is pdflatex, xetex or luatex
+
+% Ensure that generate pdf is machine readable/ATS parsable:
+\ifPDFTeX
+    \input{glyphtounicode}
+    \pdfgentounicode=1
+    \usepackage[T1]{fontenc}
+    \usepackage[utf8]{inputenc}
+    \usepackage{lmodern}
+\fi
+
+\usepackage{charter}
+
+% Some settings:
+\raggedright
+\AtBeginEnvironment{adjustwidth}{\partopsep0pt} % remove space before adjustwidth environment
+\pagestyle{empty} % no header or footer
+\setcounter{secnumdepth}{0} % no section numbering
+\setlength{\parindent}{0pt} % no indentation
+\setlength{\topskip}{0pt} % no top skip
+\setlength{\columnsep}{0.15cm} % set column seperation
+\pagenumbering{gobble} % no page numbering
+
+\titleformat{\section}{\needspace{4\baselineskip}\bfseries\large}{}{0pt}{}[\vspace{1pt}\titlerule]
+
+\titlespacing{\section}{
+    % left space:
+    -1pt
+}{
+    % top space:
+    0.3 cm
+}{
+    % bottom space:
+    0.2 cm
+} % section title spacing
+
+\renewcommand\labelitemi{$\vcenter{\hbox{\small$\bullet$}}$} % custom bullet points
+\newenvironment{highlights}{
+    \begin{itemize}[
+        topsep=0.10 cm,
+        parsep=0.10 cm,
+        partopsep=0pt,
+        itemsep=0pt,
+        leftmargin=0 cm + 10pt
+    ]
+}{
+    \end{itemize}
+} % new environment for highlights
+
+\newenvironment{highlightsforbulletentries}{
+    \begin{itemize}[
+        topsep=0.10 cm,
+        parsep=0.10 cm,
+        partopsep=0pt,
+        itemsep=0pt,
+        leftmargin=10pt
+    ]
+}{
+    \end{itemize}
+} % new environment for highlights for bullet entries
+
+\newenvironment{onecolentry}{
+    \begin{adjustwidth}{
+        0 cm + 0.00001 cm
+    }{
+        0 cm + 0.00001 cm
+    }
+}{
+    \end{adjustwidth}
+} % new environment for one column entries
+
+\newenvironment{twocolentry}[2][]{
+    \onecolentry
+    \def\secondColumn{#2}
+    \setcolumnwidth{\fill, 4.5 cm}
+    \begin{paracol}{2}
+}{
+    \switchcolumn \raggedleft \secondColumn
+    \end{paracol}
+    \endonecolentry
+} % new environment for two column entries
+
+\newenvironment{threecolentry}[3][]{
+    \onecolentry
+    \def\thirdColumn{#3}
+    \setcolumnwidth{, \fill, 4.5 cm}
+    \begin{paracol}{3}
+    {\raggedright #2} \switchcolumn
+}{
+    \switchcolumn \raggedleft \thirdColumn
+    \end{paracol}
+    \endonecolentry
+} % new environment for three column entries
+
+\newenvironment{header}{
+    \setlength{\topsep}{0pt}\par\kern\topsep\centering\linespread{1.5}
+}{
+    \par\kern\topsep
+} % new environment for the header
+
+\newcommand{\placelastupdatedtext}{% \placetextbox{<horizontal pos>}{<vertical pos>}{<stuff>}
+  \AddToShipoutPictureFG*{% Add <stuff> to current page foreground
+    \put(
+        \LenToUnit{\paperwidth-2 cm-0 cm+0.05cm},
+        \LenToUnit{\paperheight-1.0 cm}
+    ){\vtop{{\null}\makebox[0pt][c]{
+        \small\color{gray}\textit{Last updated in February 2026}\hspace{\widthof{Last updated in February 2026}}
+    }}}%
+  }%
+}%
+
+% save the original href command in a new command:
+\let\hrefWithoutArrow\href
+
+\begin{document}
+    \newcommand{\AND}{\unskip
+        \cleaders\copy\ANDbox\hskip\wd\ANDbox
+        \ignorespaces
+    }
+    \newsavebox\ANDbox
+    \sbox\ANDbox{$|$}
+
+    % Header with Images
+    \begin{header}
+        % Using minipages to place images on left/right and text in center
+        \begin{minipage}[c]{0.15\textwidth}
+            \raggedright
+            % Linked image.png to AWS SAA Credly URL
+            \href{https://www.credly.com/badges/ecc1b451-4159-44c0-9e34-29c33c1e2a4b/public_url}{\includegraphics[width=2.5cm, keepaspectratio]{image2p.png}}
+        \end{minipage}%
+        \begin{minipage}[c]{0.70\textwidth}
+            \centering
+            \fontsize{25 pt}{25 pt}\selectfont Rahul Varanasi
+
+            \vspace{5 pt}
+            \normalsize
+            
+            % Row 1: Email and Phone
+            \mbox{\hrefWithoutArrow{mailto:rahulvaranasi04@gmail.com}{rahulvaranasi04@gmail.com}}%
+            \kern 5.0 pt%
+            \AND%
+            \kern 5.0 pt%
+            \mbox{\hrefWithoutArrow{tel:+919346304157}{+91 9346304157}}%
+            
+            \par\vspace{2 pt} % Line break with a tiny vertical gap
+
+            % Row 2: GitHub and LinkedIn
+            \mbox{\hrefWithoutArrow{https://github.com/VaranasiRahul}{github.com/VaranasiRahul}}%
+            \kern 5.0 pt%
+            \AND%
+            \kern 5.0 pt%
+            \mbox{\hrefWithoutArrow{https://linkedin.com/in/VaranasiRahul}{linkedin.com/in/VaranasiRahul}}%
+        \end{minipage}%
+        \begin{minipage}[c]{0.15\textwidth}
+            \raggedleft
+             % Linked image2p.png to AWS CP Credly URL
+            \href{https://www.credly.com/badges/5210018b-e5c4-4508-bc97-256006bb29d3/public_url}{\includegraphics[width=2.5cm, keepaspectratio]{image.png}}
+        \end{minipage}
+    \end{header}
+
+    \vspace{5 pt - 0.3 cm}
+
+    % Summary Section
+    \section{Summary}
+    \begin{onecolentry}
+        DevOps Engineer with 2 years of experience automating CI/CD pipelines, orchestrating container platforms, and managing cloud infrastructure for 10+ enterprise applications at Jaguar Land Rover (Tata Consultancy Services). AWS Certified Solutions Architect Associate with expertise in Kubernetes, Terraform, GitOps, and continuous monitoring.
+    \end{onecolentry}
+
+    % Technical Skills Section
+    \section{Technical Skills}
+    
+    \begin{onecolentry}
+    \textbf{Cloud Platforms:} AWS, GCP, Azure
+    \end{onecolentry}
+    
+    \vspace{0.2 cm}
+    
+    \begin{onecolentry}
+    \textbf{Containers \& Orchestration:} Docker, Kubernetes, Helm, ArgoCD
+    \end{onecolentry}
+    
+    \vspace{0.2 cm}
+    
+    \begin{onecolentry}
+    \textbf{CI/CD \& Automation:} GitLab CI/CD, Jenkins, Maven, Automation Scripts
+    \end{onecolentry}
+    
+    \vspace{0.2 cm}
+    
+    \begin{onecolentry}
+    \textbf{Infrastructure as Code:} Terraform, Ansible
+    \end{onecolentry}
+    
+    \vspace{0.2 cm}
+    
+    \begin{onecolentry}
+    \textbf{Monitoring \& Observability:} Dynatrace, Prometheus, Grafana
+    \end{onecolentry}
+    
+    \vspace{0.2 cm}
+    
+    \begin{onecolentry}
+    \textbf{Security:} Trivy, Container Security, Vulnerability Scanning
+    \end{onecolentry}
+    
+    \vspace{0.2 cm}
+    
+    \begin{onecolentry}
+    \textbf{Scripting \& Automation:} Python, Bash/Shell, YAML, JSON
+    \end{onecolentry}
+    
+    \vspace{0.2 cm}
+    
+    \begin{onecolentry}
+    \textbf{Databases \& Web:} MySQL, MongoDB, Nginx
+    \end{onecolentry}
+    
+    \vspace{0.2 cm}
+    
+    \begin{onecolentry}
+    \textbf{Version Control \& Tools:} Git, GitHub, GitLab, Linux (Ubuntu), VS Code
+    \end{onecolentry}
+
+    % Professional Experience Section
+    \section{Professional Experience}
+    \begin{twocolentry}{April 2024 – Present}
+        \textbf{DevOps Engineer}, Tata Consultancy Services (TCS) -- Hyderabad
+    \end{twocolentry}
+    \vspace{0.10 cm}
+    \begin{onecolentry}
+        \begin{highlights}
+            \item Designed and maintained 15+ GitLab CI/CD pipelines for build, test, security scanning, containerization, and multi-environment deployments (staging → pre-prod → production), improving deployment frequency by 40\%.
+            \item Built and enhanced a Backstage-inspired Internal Developer Platform with template-based project scaffolding and role-based access management, reducing onboarding effort by 60\% for new teams.
+            \item Configured Dynatrace observability dashboards and defined SLOs/SLIs for availability and latency, reducing incident detection time by 30\%.
+            \item Provisioned infrastructure and configuration using Terraform and Ansible, reducing environment setup time by 50\% and ensuring consistent deployments.
+            \item Collaborated in a 5-member platform engineering team supporting 8+ product teams and 10+ enterprise applications across environments.
+            \item Authored 20+ technical documentation pages and runbooks on Confluence for SLO configuration and dashboard creation, facilitating knowledge sharing within the team.
+            \item Deployed 25+ containerized applications to GCP Kubernetes clusters using Helm and ArgoCD, enabling zero-downtime releases.
+            \item Integrated Cypress E2E tests into pipelines to improve release confidence by 35\%.
+        \end{highlights}
+    \end{onecolentry}
+
+    % Certifications
+\section{Certifications}
+
+\begin{onecolentry}
+\href{https://learn.microsoft.com/api/credentials/share/en-gb/RahulVaranasi-3218/1F7372AD421B4DB5?sharingId=E9C3F05C31D251C8}{\textbf{Azure Certified AI Fundamentals (AI-900)}} – 2026 \\
+\href{https://www.credly.com/badges/5210018b-e5c4-4508-bc97-256006bb29d3/public_url}{\textbf{AWS Certified Solutions Architect – Associate (SAA-C03)}} – 2025 \\
+\href{https://www.credly.com/badges/ecc1b451-4159-44c0-9e34-29c33c1e2a4b/public_url}{\textbf{AWS Certified Cloud Practitioner (CLF-C02)}} – 2025 
+
+\end{onecolentry}
+
+
+    % Projects Section
+    \section{Projects}
+    
+    \begin{twocolentry}{Jan 2026 – Present}
+        \textbf{\href{https://github.com/VaranasiRahul/RVX-AI-NOTES-PUBLIC}{RVX AI NOTES: Edge-AI Personal Knowledge Base}} (Independent Project)
+    \end{twocolentry}
+    \vspace{0.10 cm}
+    \begin{onecolentry}
+        \begin{highlights}
+            \item Developed a cross-platform mobile application using React Native and Expo, featuring 100% on-device AI processing for maximum user privacy and offline functionality.
+            \item Engineered a hybrid AI summarization pipeline (LexRank, BM25, LSA) and integrated ONNX Runtime for Transformer-based embeddings, enabling semantic topic segmentation and high-signal extraction.
+            \item Implemented a custom SuperMemo-2 (SM-2) spaced repetition algorithm to automate revision scheduling, improving long-term retention of complex technical concepts.
+            \item Leveraged Azure AI-900 certification concepts mid-development to transition the AI architecture from statistical heuristics to advanced vector-based semantic analysis.
+            \item Architected a robust data persistence layer using FileSystem-based JSON storage and atomic caching, ensuring sub-100ms startup times for notes and AI-generated artifacts.
+            \item Independently ideated and executed a novel architecture that bridges note-taking with active revision, delivering complex semantic processing entirely on-device --- eliminating the need for expensive API tokens while ensuring absolute data privacy.
+            \item Formally registered the project's unique system design to document its technical innovation, proving the expertise to independently plan and implement innovative AI solutions for modern industrial needs.
+        \end{highlights}
+    \end{onecolentry}
+
+    \vspace{0.2 cm}
+
+
+
+    \begin{twocolentry}{Jan 2026 – Present}
+        \textbf{\href{https://github.com/VaranasiRahul/MyPortfolio}{GitOps DevSecOps Cloud-Native Showcase Platform}} (Independent Project)
+    \end{twocolentry}
+    \vspace{0.10 cm}
+    \begin{onecolentry}
+        \begin{highlights}
+        \item Architected a production-grade GitOps pipeline using Jenkins, ArgoCD, Docker, and Kubernetes (k3s) enabling fully automated, zero-downtime deployments with sub-60 second release cycles.
+        \item Provisioned complete AWS infrastructure (VPC, EC2, networking, IAM) using Terraform, enabling 100\% reproducible environments.
+        \item Integrated Trivy vulnerability scanning and security gates, achieving zero critical/high vulnerabilities in production images and improving security posture by 90\%.
+        \item Optimized multi-stage Docker builds reducing image size by 85\% and adopted lightweight k3s clusters, lowering cloud costs by 70\%+.
+        \item Implemented observability with Prometheus and Grafana, configuring 10+ dashboards and alerts for application health monitoring.
+        \end{highlights}
+    \end{onecolentry}
+
+    \vspace{0.2 cm}
+
+    \begin{twocolentry}{Nov 2022 – Mar 2023}
+    \textbf{\href{https://drive.google.com/file/d/1iEg4BbHKAAMDkhGvvbMDbf_j7DofEFGA/view?usp=share_link}{Project Lead for Developing Gitam University Student Page}} -- GITAM University, Visakhapatnam
+    \end{twocolentry}
+    \vspace{0.10 cm}
+    \begin{onecolentry}
+    \begin{highlights}
+    \item Led a 15-member team to architect and deliver the university’s first student-developed web platform, managing planning, development, and 5+ releases.
+    \item Built 20+ full-stack features and standardized reusable components, improving delivery speed by 30\% and maintainability.
+    \end{highlights}
+    \end{onecolentry}
+    
+    \vspace{0.3 cm}
+    
+    \begin{twocolentry}{Jan 2022 – Apr 2022}
+    \textbf{\href{https://drive.google.com/drive/folders/1zI3nOCrFoixYJ8jNndZCn0pqL0HaJsgk?usp=share_link}{Cloud Computing Intern}}, \href{https://drive.google.com/drive/folders/1zI3nOCrFoixYJ8jNndZCn0pqL0HaJsgk?usp=share_link}{AWS Training + Internship} -- Verzeo, Hyderabad
+    \end{twocolentry}
+    \vspace{0.10 cm}
+    \begin{onecolentry}
+    \begin{highlights}
+    \item Gained hands-on experience provisioning 10+ cloud infrastructure resources using EC2, S3, RDS, Lambda, and VPC while designing scalable deployment architectures.
+    \end{highlights}
+    \end{onecolentry}
+
+
+    % Education Section
+    \section{Education}
+    \begin{twocolentry}{2019 – 2023}
+        \textbf{B.Tech in Computer Science Engineering} – GITAM University, Visakhapatnam, Andhra Pradesh
+    \end{twocolentry}
+     \vspace{0.2 cm}
+    \begin{twocolentry}{2019}
+        \textbf{Intermediate (MPC)} – Sri Gayatri Junior College, Visakhapatnam, Andhra Pradesh
+    \end{twocolentry}
+    
+    \vspace{0.2 cm}
+
+    \begin{twocolentry}{2017}
+        \textbf{ICSE (Class X)} – Timpany School, Visakhapatnam, Andhra Pradesh
+    \end{twocolentry}
+
+    \placelastupdatedtext
+
+\end{document}

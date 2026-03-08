@@ -1,6 +1,6 @@
 # Deep Technical Overview: Edge AI & Hybrid Intelligence
 
-This document provides an exhaustive technical breakdown of the AI systems powering the **Daily Revision Hub**. The application utilizes a sophisticated multi-layered AI architecture that combines on-device statistical models, vector embeddings, and cloud-based LLMs to deliver intelligent note organization and summarization.
+This document provides an exhaustive technical breakdown of the AI systems powering **RVX AI NOTES**. The application utilizes a sophisticated multi-layered AI architecture that combines on-device statistical models, vector embeddings, and cloud-based LLMs to deliver intelligent note organization and summarization.
 
 ## 1. AI Pipeline Data Flow
 

@@ -1,6 +1,6 @@
 # System Architecture
 
-This document provides a high-level overview of the architectural design decisions and data flows powering the **Daily Revision Hub**.
+This document provides a high-level overview of the architectural design decisions and data flows powering the **RVX AI NOTES**.
 
 ## Core Architecture Philosophy
 The application follows an **Offline-First Edge-AI architecture**. All critical data processing, including natural language processing, embeddings generation, and database queries, happen directly on the user's device. 
