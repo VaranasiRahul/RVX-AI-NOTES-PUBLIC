@@ -157,9 +157,9 @@ graph TD
 Built to solve the friction of manual revision, this app pushes AI models directly to the edge. It ensures **100% privacy** and **offline availability** while providing intelligent, adaptive study aids.
 
 ## 🔗 Contact & Links
-- **LinkedIn**: [Your LinkedIn URL]
+- **LinkedIn**: [https://www.linkedin.com/in/varanasirahul/](https://www.linkedin.com/in/varanasirahul/)
 - **Portfolio**: [Your Portfolio URL]
 
 ---
-*Created by [Your Name]*
+*Created by Rahul Varanasi*
 
