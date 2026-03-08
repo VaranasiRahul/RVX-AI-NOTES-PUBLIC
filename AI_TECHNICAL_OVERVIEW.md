@@ -2,9 +2,42 @@
 
 This document provides an exhaustive technical breakdown of the AI systems powering the **Daily Revision Hub**. The application utilizes a sophisticated multi-layered AI architecture that combines on-device statistical models, vector embeddings, and cloud-based LLMs to deliver intelligent note organization and summarization.
 
+## 1. AI Pipeline Data Flow
+
+The following diagram illustrates the lifecycle of a note as it passes through the multi-stage AI pipeline:
+
+```mermaid
+graph TD
+    Input[Raw Markdown / Text Content] --> Parser[Structural Parser]
+    
+    subgraph Chunking_Layer [Segmentation & Boundary Detection]
+        Parser --> Structural[Structural Boundary Detection: H#, Bold, Lists]
+        Structural --> Semantic[Semantic Shift Detection: Jaccard Similarity]
+        Semantic --> ONNX_Check[ONNX Semantic Valley Detection: MiniLM Embeddings]
+    end
+    
+    ONNX_Check --> Blocks[Topic Blocks / Revision Cards]
+    
+    subgraph Intelligence_Layer [Hybrid Scoring Pipeline]
+        Blocks --> TFIDF[TF-IDF Vectorization]
+        TFIDF --> Graph[LexRank & TextRank: Graph Centrality]
+        TFIDF --> BM25[BM25: Keyword Density]
+        TFIDF --> LSA[LSA: Singular Value Decomposition]
+        Graph & BM25 & LSA --> FusedScore[Fused Relevance Scoring]
+    end
+    
+    subgraph Optimization_Layer [Selection & Formatting]
+        FusedScore --> MMR[MMR: Redundancy Reduction]
+        MMR --> Extract[Key Terms & Definition Extraction]
+        Extract --> CodeScore[Code Importance Scoring]
+    end
+    
+    CodeScore --> Final[Structured Revision Block: Title, Summary, Keywords, Code]
+```
+
 ---
 
-## 1. Hybrid AI Architecture Philosophy
+## 2. Hybrid AI Architecture Philosophy
 
 The project employs a **Tiered Intelligence Strategy**:
 
