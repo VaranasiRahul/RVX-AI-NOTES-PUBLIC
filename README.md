@@ -1,43 +1,92 @@
 <div align="center">
 
 # RVX AI NOTES
-**AI-Powered Offline-First Study & Revision Application**
+**On-Device Generative AI Study & Revision Application**
 
-A React Native (Expo) mobile application built to solve the friction of manual revision by pushing AI models directly to the edge. Using a **custom hybrid summarizer** and **ONNX Runtime**, it provides intelligent, adaptive study aids with **100% privacy** and **offline availability**.
+A React Native (Expo) mobile application that runs a **local Llama 3.2 1B language model** directly on your phone via **ExecuTorch** — delivering intelligent, abstractive AI summaries with **100% privacy** and **zero internet dependency**.
 
 *Note: This repository serves as a portfolio demonstration and architectural overview. The full source code is maintained in a private repository.*
 
+[![Platform](https://img.shields.io/badge/Platform-Android%20%7C%20iOS-blue?style=for-the-badge&logo=react)](https://expo.dev)
+[![Language](https://img.shields.io/badge/Language-TypeScript-3178C6?style=for-the-badge&logo=typescript)](https://www.typescriptlang.org/)
+[![AI](https://img.shields.io/badge/AI-Llama%203.2%201B%20%7C%20ExecuTorch-orange?style=for-the-badge)](https://github.com/pytorch/executorch)
+[![Author](https://img.shields.io/badge/Author-Rahul%20Varanasi-brightgreen?style=for-the-badge)](https://www.linkedin.com/in/varanasirahul/)
+
 </div>
+
+---
+
+## What Changed in v2
+
+The AI engine was **completely rebuilt**. The previous ONNX Runtime / MiniLM embedding approach was replaced by a true on-device **generative LLM pipeline** using Meta's ExecuTorch inference runtime.
+
+| Area | Before (v1) | After (v2) |
+|---|---|---|
+| **On-device AI** | ONNX Runtime + MiniLM embeddings | ExecuTorch + Llama 3.2 1B SpinQuant |
+| **Summary type** | Extractive (sentence selection) | Abstractive (generated text) |
+| **Model size** | ~23MB MiniLM | ~500–600MB Llama .pte |
+| **Model download** | Bundled at install | Explicit user-initiated from Settings |
+| **Summarization scope** | Per-block extractive | Per-block + whole-note generative |
+| **Content awareness** | None | Feynman-style prompts per content type |
+
+---
 
 ## Feature Overview
 
-### 1. Smart Dashboard & Revision Feed
-The central hub of the application. The **revision feed** intelligently surfaces note blocks that require attention. Using a liquid-glass aesthetic, the UI provides a distraction-free environment for focus.
+### 1. Intelligent Revision Feed
+The central hub of the app. Notes are automatically split into **topic blocks** by a multi-signal semantic parser and surfaced in an algorithmic feed driven by **SM-2 Spaced Repetition** scheduling.
+
 <p align="center">
   <img src="assets/home_feed.png" height="450" />
+  <img src="assets/ai_feed.png" height="450" />
 </p>
 
-Experience zero-latency AI. Utilizing a **proprietary hybrid summarizer** (BM25, LexRank, MMR) and **ONNX-driven embeddings**, the app processes your raw notes locally to generate concise, actionable study blocks.
+### 2. On-Device LLM Summaries (Llama 3.2 1B via ExecuTorch)
+The app downloads and runs a quantized **Llama 3.2 1B SpinQuant** model locally on the device. No API key. No server. No data leaves the phone.
+
 <p align="center">
-  <img src="assets/ai_feed.png" height="450" />
   <img src="assets/ai_summary.png" height="450" />
 </p>
 
-### 3. Intelligent Organization & Topic Analysis
-The app doesn't just store notes; it understands them. It automatically categorizes content into **Folders** and performs **Topic Analysis** to cluster related concepts together for deeper context.
+Summaries are **content-type aware** — the model receives a different Feynman-style prompt based on what it's reading:
+
+| Content Type | Prompt Strategy |
+|---|---|
+| Theory / Concept | Analogy + Mechanism + Exam Tip + Recall cue |
+| Command Reference | Command Cheat Sheet format |
+| Tutorial / Steps | Step-by-step condensed summary |
+| Code Reference | Code explanation with purpose |
+
+### 3. Whole-Note AI Summary Tab
+Beyond block-level cards, the **Summaries tab** generates one comprehensive, structured AI summary for an entire note — regardless of how many topic blocks it was split into.
+
+A **7-stage pipeline** drives this:
+1. Goal Extraction (detect note type)
+2. Content Analysis (identify subjects & depth)
+3. Block Typing (theory / code / procedural)
+4. Architecture (choose output schema)
+5. Compression (smart truncation, 3500 char context cap)
+6. LLM Generation (512 max tokens, single call)
+7. Assembly (validate, clean, return markdown)
+
+Summaries are **cached on-disk** (DJB2 hash keyed per note ID + content hash) and reused until the note content changes.
+
+### 4. Smart Topic Parser
+The parser splits raw Markdown notes into revision blocks using multiple signals simultaneously:
+
+- **Hard structural boundaries**: `#` headings, `**Bold**`-only lines, numbered items, ALL CAPS headings
+- **Semantic shift detection**: Jaccard vocabulary overlap between adjacent paragraphs
+- **Tech entity dictionary**: Recognizes 30+ tech topics (Docker, K8s, AWS, SQL, Git, etc.) — never merges different-subject blocks
+- **Smart merge logic**: Fragments below word threshold are merged unless both start at a boundary
+- **Inline splitting**: Handles dense single-line dumps pasted from ChatGPT
+
+### 5. Organized Note Management
 <p align="center">
   <img src="assets/folder_org.png" height="450" />
   <img src="assets/topic_view.png" height="450" />
 </p>
 
-### 4. Focused Note Revision
-Every generated block allows for deep dives. The **Note View** renders complex Markdown and allows users to jump back into the full context of their original documents instantly.
-<p align="center">
-  <img src="assets/note_detail.png" height="450" />
-</p>
-
-### 5. Habit Building & Personalization
-Stay consistent with **Daily Streaks** and progress tracking. The **Advanced Settings** enable deep customization of the on-device AI models, UI theme (Midnight Glass, etc.), and local data management.
+### 6. Habit Building & Streaks
 <p align="center">
   <img src="assets/streak.png" height="450" />
   <img src="assets/settings.png" height="450" />
@@ -46,117 +95,167 @@ Stay consistent with **Daily Streaks** and progress tracking. The **Advanced Set
 ---
 
 ## Technical Specifications
-**Frontend (Mobile):**
-- **React Native & Expo**: File-based routing with Expo Router.
-- **Reanimated & Glassmorphism**: High-performance 60fps gestures and premium UI blurs.
 
-**Edge AI Engine:**
-- **Custom Hybrid Summarizer**: Proprietary implementation of LexRank, TextRank, and BM25 for offline text analysis.
-- **ONNX Runtime**: High-performance on-device model execution for `MiniLM` embeddings.
+### Frontend (Mobile)
+- **React Native & Expo SDK 54**: File-based routing via Expo Router v6
+- **Reanimated v4 & Gesture Handler**: 60fps gesture-driven animations throughout
+- **Glassmorphism UI**: `expo-blur` + `expo-glass-effect` for premium visual feel
+- **Typography**: DM Sans + Playfair Display via Google Fonts
 
-**Persistence:**
-- **Drizzle ORM**: Type-safe local SQLite interactions.
-- **React Query**: Robust server-state and cache management.
+### On-Device Generative AI Engine
+- **Model**: Llama 3.2 1B SpinQuant (`.pte` format, ~500–600MB)
+- **Runtime**: ExecuTorch via `react-native-executorch ^0.8.3`
+- **Download**: User-initiated from Settings; stored in device-local cache
+- **Load time**: ~3–8 seconds into native memory after first download
+- **Inference**: `temperature: 0.3`, `top-p: 0.9` for structured factual output
+- **KV cache**: Stays small (~50–100MB) — fits in 2GB free RAM
+
+### Extractive AI Fallback (Pure TypeScript, zero native deps)
+When the LLM is unavailable, a custom hybrid engine runs in ~300–800ms:
+
+$$S = 0.30 \cdot LexRank + 0.22 \cdot BM25 + 0.18 \cdot TextRank + 0.18 \cdot LSA + 0.12 \cdot Structural$$
+
+- **LexRank**: Eigenvector centrality on TF-IDF cosine similarity graph
+- **BM25**: Keyword density with document-length normalization
+- **TextRank**: PageRank variant over sliding token windows
+- **LSA**: SVD + Power Iteration for latent topic extraction
+- **MMR**: Maximal Marginal Relevance for redundancy reduction
+- **Code Importance Scoring**: Only high-signal code blocks surface in summaries
+
+### Spaced Repetition Engine (SM-2)
+Every topic block is scheduled using a custom SM-2 implementation:
+
+$$EF' = \max(1.3, EF + (0.1 - (5-q) \cdot (0.08 + (5-q) \cdot 0.02)))$$
+
+- User ratings: Easy / Good / Hard / Again
+- **Interval progression**: 1 day → 6 days → `interval × EF`
+- **Feed interleaving**: 1 "Hard" topic per 2 regular/due topics
+
+### Persistence
+- **FileSystem JSON** (`expo-file-system`): Primary store for notes, AI cache, topic splits — avoids AsyncStorage 2–6MB limits
+- **AsyncStorage**: Fast-access metadata only (theme, streak, settings)
+- **Atomic hashing**: DJB2 content hash checked before every write — prevents redundant AI compute
 
 ---
 
 ## Architectural Design
 
-This section provides a high-level overview of the architectural design decisions and data flows powering the **RVX AI NOTES**.
-
-### Core Architecture Philosophy
-The application follows an **Offline-First Edge-AI architecture**. All critical data processing, including natural language processing, embeddings generation, and database queries, happen directly on the user's device. 
-
-**Why Offline-First Edge-AI?**
-1. **Privacy**: User notes are deeply personal. Processing them locally ensures no private text is transmitted over the network.
-2. **Speed & Availability**: Instant topic extractions and summaries regardless of network connectivity.
-3. **Cost Efficiency**: Eliminates the need for expensive cloud inference APIs.
-
----
-
 ### High-Level System Diagram
 
 ```mermaid
 graph TD
-    subgraph UI Layer [UI & Presentation Layer]
-        Router[Expo Router]
-        Screens[Screens: Home, Stories, Notes]
-        Gestures[Reanimated UI / Glassmorphism]
+    subgraph UI_Layer [UI & Presentation Layer]
+        Router[Expo Router v6]
+        Screens[Feed · Summaries · Folders · Streak · Settings]
+        Reanimated[Reanimated v4 / Glassmorphism]
     end
 
-    subgraph Logic Layer [Business Logic & State]
-        ReactQuery[React Query / Caching]
-        Context[Notes Context]
-        Parser[Smart Topic Parser]
+    subgraph Logic_Layer [Business Logic & State]
+        Context[NotesContext — Global State]
+        ReactQuery[TanStack Query v5]
+        SM2[SM-2 Spaced Repetition Scheduler]
     end
 
-    subgraph Local AI Engine [On-Device ML Layer]
-        HF[HuggingFace Transformers]
-        ONNX[ONNX Runtime React Native]
-        Summarizer[Local Text Summarizer]
-        Embeddings[Vector Embeddings Generator]
+    subgraph AI_Layer [On-Device AI Layer]
+        LLM[ExecuTorch — Llama 3.2 1B SpinQuant]
+        IntelligentSummarizer[Intelligent Summarizer — 7-Stage Pipeline]
+        Parser[Smart Topic Parser v2.2]
+        LocalSummarizer[Hybrid Extractive Engine — BM25+LexRank+LSA]
+        DeepSummarizer[Deep Summarizer v2 — Explanatory Flow]
+        SummaryCache[Note Summary Cache — DJB2 Hashed]
     end
 
-    subgraph Data Access Layer [Storage Layer]
-        Drizzle[Drizzle ORM]
-        SQLite[(Local SQLite DB)]
-        FileSystem[Expo FileSystem.documentDirectory]
+    subgraph Storage_Layer [Storage Layer]
+        FileSystem[expo-file-system — JSON artifacts]
+        AsyncStorage[AsyncStorage — Metadata / Settings]
     end
 
-    subgraph Native Integrations
+    subgraph Native_Layer [Native Integrations]
         Widget[Android Home Screen Widget]
-        Notifications[Local Notifications]
+        Notifications[Local Push Notifications]
     end
 
-    %% Connections
     Router --> Screens
-    Screens --> ReactQuery
     Screens --> Context
-    
+    Screens --> ReactQuery
+    Context --> SM2
     Context --> Parser
-    Parser <--> Summarizer
-    Parser <--> Embeddings
-    
-    Summarizer --> HF
-    Embeddings --> ONNX
-    
-    ReactQuery --> Drizzle
-    Drizzle --> SQLite
-    
+    Parser --> LLM
+    Parser --> LocalSummarizer
+    Parser --> DeepSummarizer
+    IntelligentSummarizer --> LLM
+    IntelligentSummarizer --> SummaryCache
+    LLM --> SummaryCache
+    LocalSummarizer --> DeepSummarizer
     Context --> FileSystem
-    
-    Widget -.-> Filesystem/SQLite
+    ReactQuery --> AsyncStorage
+    Widget -.-> FileSystem
     Notifications --> Widget
 ```
 
-### Component Deep Dive
+### AI Pipeline Data Flow
 
-**1. UI & Presentation Layer**
-- Built with **Expo Router** for file-based routing.
-- Leverages `react-native-reanimated` for 60fps gesture-driven animations (e.g., swiping between story cards).
-- Styled using custom glassmorphism components (`expo-blur`, `expo-glass-effect`) to give a modern, premium feel.
+```mermaid
+graph TD
+    Input[Raw Markdown Note] --> Parser[Smart Topic Parser v2.2]
 
-**2. On-Device AI Engine (`lib/localSummarizer.ts`, `lib/onnxEmbeddings.ts`)**
-- Instead of relying on heavy high-level libraries, the app uses a **custom statistical/graph-based hybrid summarizer** for zero-latency text processing.
-- **ONNX Runtime** executes quantized `all-MiniLM-L6-v2` transformer models for embeddings, which are used to analyze long notes, cluster them into "Topics", and detect semantic boundaries.
+    subgraph Segmentation [Topic Segmentation]
+        Parser --> HardBoundary[Hard Boundary Detection: H1/H2/H3, Bold, ALL CAPS]
+        Parser --> JaccardCheck[Jaccard Semantic Shift Detection]
+        Parser --> EntityDetect[Tech Entity Dictionary — 30+ topics]
+        HardBoundary & JaccardCheck & EntityDetect --> Blocks[Topic Blocks / Revision Cards]
+    end
 
-**3. Data Flow & Persistence (`lib/persistentStore.ts`)**
-- **Drizzle ORM** manages the local SQLite tables with strict TypeScript schemas.
-- Extracted JSON artifacts and raw note texts are saved persistently to `FileSystem.documentDirectory` instead of `AsyncStorage` to avoid size limits and parse errors.
-- **React Query** manages the asynchronous data state, ensuring the UI always reflects the latest database state without manually triggering re-renders everywhere.
+    subgraph BlockSummary [Block-Level Summarization]
+        Blocks --> ContentType[Content-Type Classification]
+        ContentType --> FeynmanPrompt[Feynman Prompt Builder]
+        FeynmanPrompt --> LLM[Llama 3.2 1B — ExecuTorch]
+        LLM --> BlockSummaryOut[Abstractive Block Summary]
+    end
 
-**4. Native Android Widget (`widget/`)**
-- A custom Kotlin-bridged widget built via `react-native-android-widget`.
-- Operates independently from the main React Native thread to render the user's saved/bookmarked revision blocks directly on their home screen.
-- Supports tap-to-deep-link targeting specific folders within the Expo app.
+    subgraph WholeSummary [Whole-Note Summary — 7 Stages]
+        Input --> Stage1[Stage 1: Goal Extraction]
+        Stage1 --> Stage2[Stage 2: Content Analysis]
+        Stage2 --> Stage3[Stage 3: Block Typing]
+        Stage3 --> Stage4[Stage 4: Architecture Selection]
+        Stage4 --> Stage5[Stage 5: Smart Compression 3500 chars]
+        Stage5 --> Stage6[Stage 6: LLM Generation 512 tokens]
+        Stage6 --> Stage7[Stage 7: Assembly & Cache]
+    end
 
-
-
-
-## Contact Information
-- **LinkedIn**: [https://www.linkedin.com/in/varanasirahul/](https://www.linkedin.com/in/varanasirahul/)
-
+    subgraph Fallback [Extractive Fallback - no LLM needed]
+        Blocks --> TFIDF[TF-IDF Vectorization]
+        TFIDF --> LexRank[LexRank - Eigenvector Centrality]
+        TFIDF --> BM25[BM25 - Keyword Density]
+        TFIDF --> LSA[LSA - SVD Topic Extraction]
+        TFIDF --> TextRank[TextRank - PageRank Variant]
+        LexRank & BM25 & LSA & TextRank --> FusedScore[Fused Relevance Score]
+        FusedScore --> MMR[MMR - Redundancy Reduction]
+        MMR --> ExtractiveOut[Extractive Summary]
+    end
+```
 
 ---
-*Created by Rahul Varanasi*
 
+## Removed in v2
+
+The following components from v1 were **fully removed** and replaced:
+
+| Removed | Replacement |
+|---|---|
+| `lib/onnxEmbeddings.ts` | `lib/llmSummarizer.ts` (ExecuTorch) |
+| ONNX Runtime dependency | `react-native-executorch ^0.8.3` |
+| `all-MiniLM-L6-v2` model (~23MB) | Llama 3.2 1B SpinQuant (~500–600MB) |
+| Cosine similarity valley detection | Jaccard + entity dictionary (in smartTopicParser) |
+| Semantic embedding boundary detection | Rule-based + statistical semantic shift |
+
+---
+
+## Contact Information
+
+- **LinkedIn**: [https://www.linkedin.com/in/varanasirahul/](https://www.linkedin.com/in/varanasirahul/)
+- **Email**: rahulvaranasi04@gmail.com
+
+---
+
+*Created by Rahul Varanasi — © 2026 All Rights Reserved*

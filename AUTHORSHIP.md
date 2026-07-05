@@ -39,7 +39,7 @@ I, **Rahul Varanasi**, hereby declare that:
 
 2. **The design** — including the UI/UX architecture, navigation structure, card-based feed system, story-style review mode, local AI summarization pipeline, and widget system — was **independently designed by me**, without copying or adapting from any other project.
 
-3. **The codebase** — including all source files written in TypeScript, React Native, Expo, SQLite/Drizzle ORM, ONNX Runtime, and supporting libraries — was **written entirely by me** from the ground up.
+3. **The codebase** — including all source files written in TypeScript, React Native, Expo, ExecuTorch (Llama 3.2 1B on-device LLM), custom NLP pipelines (BM25, LexRank, LSA), and supporting libraries — was **written entirely by me** from the ground up.
 
 4. **No co-author, employer, contractor, or third party** has contributed any original creative expression to this project's codebase, design, or concept. All AI assistance used during development was used as a tool under my direction and does not constitute co-authorship.
 

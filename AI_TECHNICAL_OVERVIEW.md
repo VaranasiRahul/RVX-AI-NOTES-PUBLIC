@@ -1,174 +1,377 @@
-# Deep Technical Overview: Edge AI & Hybrid Intelligence
+# Deep Technical Overview: On-Device Generative AI Architecture
 
-This document provides an exhaustive technical breakdown of the AI systems powering **RVX AI NOTES**. The application utilizes a sophisticated multi-layered AI architecture that combines on-device statistical models, vector embeddings, and cloud-based LLMs to deliver intelligent note organization and summarization.
+This document provides an exhaustive technical breakdown of the AI systems powering **RVX AI NOTES**. The application runs a **local Llama 3.2 1B language model** directly on the user's device via **Meta's ExecuTorch** inference runtime — eliminating cloud calls entirely.
 
-## 1. AI Pipeline Data Flow
+---
 
-The following diagram illustrates the lifecycle of a note as it passes through the multi-stage AI pipeline:
+## 1. AI Architecture Overview
 
-```mermaid
-graph TD
-    Input[Raw Markdown / Text Content] --> Parser[Structural Parser]
-    
-    subgraph Chunking_Layer [Segmentation & Boundary Detection]
-        Parser --> Structural[Structural Boundary Detection: H#, Bold, Lists]
-        Structural --> Semantic[Semantic Shift Detection: Jaccard Similarity]
-        Semantic --> ONNX_Check[ONNX Semantic Valley Detection: MiniLM Embeddings]
-    end
-    
-    ONNX_Check --> Blocks[Topic Blocks / Revision Cards]
-    
-    subgraph Intelligence_Layer [Hybrid Scoring Pipeline]
-        Blocks --> TFIDF[TF-IDF Vectorization]
-        TFIDF --> Graph[LexRank & TextRank: Graph Centrality]
-        TFIDF --> BM25[BM25: Keyword Density]
-        TFIDF --> LSA[LSA: Singular Value Decomposition]
-        Graph & BM25 & LSA --> FusedScore[Fused Relevance Scoring]
-    end
-    
-    subgraph Optimization_Layer [Selection & Formatting]
-        FusedScore --> MMR[MMR: Redundancy Reduction]
-        MMR --> Extract[Key Terms & Definition Extraction]
-        Extract --> CodeScore[Code Importance Scoring]
-    end
-    
-    CodeScore --> Final[Structured Revision Block: Title, Summary, Keywords, Code]
+The app uses a **three-tier intelligence strategy**:
+
+| Tier | Engine | Latency | Use Case |
+|---|---|---|---|
+| **Tier 1: Heuristics** | Rule-based structural parsing | ~0ms | Topic boundaries (headers, lists, dividers) |
+| **Tier 2: Statistical NLP** | BM25 + LexRank + TextRank + LSA + MMR | ~300–800ms | Extractive summaries & fallback |
+| **Tier 3: On-Device LLM** | Llama 3.2 1B SpinQuant via ExecuTorch | ~60–120s | Abstractive summaries & whole-note analysis |
+
+> **Note:** The cloud LLM (Gemini API) integration is an optional Tier 4 — not the primary AI path. The default experience is fully offline.
+
+---
+
+## 2. On-Device LLM Engine (`lib/llmSummarizer.ts`)
+
+### Model Details
+| Property | Value |
+|---|---|
+| **Model** | Llama 3.2 1B SpinQuant |
+| **Format** | `.pte` (ExecuTorch portable format) |
+| **Size** | ~500–600MB |
+| **Runtime** | `react-native-executorch ^0.8.3` |
+| **Download** | Explicit user-initiated from Settings |
+| **Storage** | Device-local cache via `ExpoResourceFetcher` |
+| **Load time** | ~3–8s into native memory |
+| **KV cache** | ~50–100MB at inference time |
+
+### Initialization Sequence
+```
+App Launch
+  └── initLLM() [non-blocking, background]
+        └── isModelDownloaded()
+              ├── YES → _loadModelIntoMemory()
+              │         └── LLMModule.fromModelName(LLAMA3_2_1B_SPINQUANT)
+              │               → _llmInstance ready
+              └── NO  → wait for user-initiated download
+```
+
+### Inference Configuration
+```typescript
+llm.configure({
+    generationConfig: {
+        temperature: 0.3,   // Low temp → structured, factual output
+        topp: 0.9,          // Nucleus sampling
+    },
+});
+```
+
+### Content-Type Aware Prompting (Feynman Variants)
+The `buildSummaryPrompt()` function detects content type and selects a matching Feynman-style prompt template:
+
+| `ContentType` | Prompt Strategy | Output Format |
+|---|---|---|
+| `theory` / `mixed` | "Explain like a teacher" → analogy + mechanism | Analogy · Mechanism · Exam Tip · Recall cue |
+| `command-reference` | "Create a command cheat sheet" | Command list with purpose |
+| `tutorial` | "Summarize these steps" | Numbered step condensation |
+| `reference` | "Explain this code" | Code explanation with context |
+
+### State Management & Listeners
+The engine uses a singleton pattern with event emitters for UI status updates:
+
+```typescript
+interface LLMStatus {
+    isReady: boolean;
+    isGenerating: boolean;
+    downloadProgress: number;  // 0–1
+    error: string | null;
+    modelLoaded: boolean;
+}
+
+// Subscribe from any component
+const unsub = addLLMStatusListener((status: LLMStatus) => { ... });
 ```
 
 ---
 
-## 2. Hybrid AI Architecture Philosophy
+## 3. Whole-Note Summarizer (`lib/intelligentSummarizer.ts`)
 
-The project employs a **Tiered Intelligence Strategy**:
+Generates ONE comprehensive summary for an entire note — displayed in the Summaries tab.
 
-- **Tier 1: Ultra-Fast On-Device Heuristics**: Instant structural parsing of raw text to detect headers, code blocks, and lists.
-- **Tier 2: Statistical Edge AI**: A proprietary hybrid summarizer running entirely on the device CPU/NPU, providing 100% privacy and zero-latency analysis.
-- **Tier 3: Semantic Edge AI (ONNX)**: Transformer-based embeddings used for semantic boundary detection and topic clustering.
-- **Tier 4: Cloud-Scale LLM (Gemini 2.0)**: Optional high-fidelity analysis for complex, unstructured notes using state-of-the-art generative models.
+### 7-Stage Pipeline
+
+```
+Stage 1: Goal Extraction
+  └── detectNoteType(content) → 'lecture' | 'code-study' | 'concept-map' | 'procedure' | 'mixed'
+        Rules: code ratio, shell commands, step markers, definition phrases, H2 density
+
+Stage 2: Content Analysis
+  └── profileContent(content) → ContentProfile
+        Outputs: hasCode, hasDefinitions, hasProcedures, hasFormulas, estimatedComplexity, wordCount
+
+Stage 3: Block Typing
+  └── classify content blocks into theory / code / procedural
+
+Stage 4: Architecture Selection
+  └── buildPrompt(noteType, profile) → system prompt
+        Selects output schema matching note type + content profile
+
+Stage 5: Compression
+  └── smartCompressContent(content, 3500) → truncated string
+        Priority: headings > definitions > first sentences > examples
+        Hard cap at 3500 chars to fit model context window
+
+Stage 6: LLM Generation
+  └── llm.generate(prompt, { maxNewTokens: 512 }) → raw output
+        Single call — 60–120s generation time
+
+Stage 7: Assembly
+  └── Validate, strip artifacts, ensure headings present
+  └── Return SummaryGenerationResult { content, source, noteType, keywords }
+```
+
+### Output Schema (per note type)
+
+**Lecture/Mixed:**
+```
+📌 Overview
+🧠 Key Concepts
+🔑 Key Takeaways
+⚡ Quick Recall
+```
+
+**Code-Study:**
+```
+📌 What This Covers
+🔧 Core Commands / APIs
+💡 How It Works
+⚠️ Watch Out For
+```
+
+**Procedure:**
+```
+📌 Goal
+📋 Steps (numbered)
+⚠️ Prerequisites
+🔗 Expected Outcome
+```
 
 ---
 
-## 2. On-Device Summarization Engine (`lib/localSummarizer.ts`)
+## 4. Note Summary Cache (`lib/noteSummaryCache.ts`)
 
-The core of the offline experience is a custom summarization pipeline that fuses multiple NLP algorithms to extract high-signal content.
+Summaries are persisted between sessions using a **content-hash keyed file cache**.
 
-### A. The Fused Scoring Pipeline
-Each sentence in a document is assigned a "Relevance Score" ($S$) calculated as a weighted linear combination of five distinct signals:
+- **Location**: `documentDirectory/ai_note_summaries_v1/`
+- **Key**: `{noteId}__{djb2Hash(content)}.json`
+- **Invalidation**: Hash changes if note content changes → old cache auto-cleared
+- **Event emitter**: `onNoteSummaryUpdated(noteId)` notifies UI reactively
+
+```typescript
+interface NoteSummary {
+    content: string;       // Structured markdown for display
+    generatedAt: string;   // ISO timestamp
+    source: 'llm' | 'extractive';
+    contentHash: string;   // DJB2 hash of original note content
+}
+```
+
+---
+
+## 5. Smart Topic Parser (`lib/smartTopicParser.ts`)
+
+The parser is the "Orchestrator" — it decides how to split raw notes into revision blocks.
+
+### Multi-Signal Splitting (v2.2)
+
+#### Hard Boundaries (instant, no blank line required)
+```
+• Markdown H1/H2/H3     →  # heading
+• Numbered sections     →  "4. Deployment", "10. Persistent Volume"
+• Bold-only lines       →  **Heading** or __Heading__
+• Colon headers         →  "Worker nodes:", "API Server:" (≤6 words)
+• ALL CAPS headings     →  "TIME COMPLEXITY" (≤8 words)
+• Triple dividers       →  --- or === (2+ consecutive)
+• Roman numerals        →  "I. Introduction"
+```
+
+#### Semantic Shift Detection
+```
+Jaccard Similarity:
+  words_A ∩ words_B
+  ─────────────────  < 0.10 → split (topic shifted)
+  words_A ∪ words_B
+
+Applied over: current block accumulated context vs. next paragraph
+```
+
+#### Tech Entity Dictionary
+30+ tech topics (Docker, Kubernetes, Terraform, AWS, Azure, SQL, Python, Git, etc.):
+- Each topic has **primary identifiers** (unambiguous tool names)
+- And **secondary context words** (supporting terms)
+- **Primary-word match** in adjacent blocks triggers hard subject boundary
+
+#### Smart Merge Logic
+```
+Fragment (<6 words) → always merge into previous
+Short block (<20 words) AND prev block not structural-boundary → merge
+Different detected tech topics → never merge (subject-aware)
+```
+
+---
+
+## 6. Extractive Summarizer (`lib/localSummarizer.ts`)
+
+Custom hybrid pipeline — runs entirely in TypeScript, zero native modules.
+
+### Fused Scoring Formula
 
 $$S = 0.30 \cdot LexRank + 0.22 \cdot BM25 + 0.18 \cdot TextRank + 0.18 \cdot LSA + 0.12 \cdot Structural$$
 
-1.  **LexRank (Eigenvector Centrality)**:
-    - Builds a cosine similarity matrix of TF-IDF vectors.
-    - Applies a stochastic matrix transformation to find the most "central" sentences in the document graph.
-    - Uses Power Iteration to converge on sentence importance.
-2.  **BM25 (Best Matching 25)**:
-    - Ranks sentences based on their frequency relative to the top keywords extracted from the document.
-    - Incorporates document length normalization to prevent bias toward long sentences.
-3.  **TextRank (Graph-based Ranking)**:
-    - A variations of PageRank that operates on a sliding window of tokens to identify local semantic clusters.
-4.  **LSA (Latent Semantic Analysis)**:
-    - Uses Singular Value Decomposition (SVD) and Power Iteration to extract hidden semantic topics and score sentences based on their alignment with these primary topics.
-5.  **Structural & Positional Signals**:
-    - **Position Scoring**: Boosts lead sentences and conclusion sentences.
-    - **Definition Detection**: Uses regex-based signals (`"is a"`, `"refers to"`, etc.) to surface key concepts.
-    - **Heading Boost**: High weight given to sentences immediately following a markdown header.
+| Algorithm | Mechanism |
+|---|---|
+| **LexRank** | TF-IDF cosine similarity matrix → Power Iteration → eigenvector centrality |
+| **BM25** | `K1=1.5, B=0.75` — keyword frequency with document-length normalization |
+| **TextRank** | PageRank on 3-token sliding window co-occurrence graph |
+| **LSA** | SVD (`topics=4`) + Power Iteration → sentence-topic alignment scores |
+| **Structural** | Position bonus (lead/conclusion), definition detection, heading proximity |
 
-### B. Maximal Marginal Relevance (MMR)
-To avoid redundancy, the final sentence selection uses **MMR**. Instead of picking the $K$ highest-scoring sentences, it picks sentences that are high-scoring but *semantically distinct* from those already selected.
+### Maximal Marginal Relevance (MMR)
+$$\text{MMR}(s) = \lambda \cdot S(s) - (1-\lambda) \cdot \max_{s_j \in Selected} \cos(s, s_j)$$
 
----
+- `λ = 0.65` — balances relevance vs. diversity
+- Prevents redundant sentences from appearing in output
 
-## 3. Semantic Splitting & Embeddings (`lib/onnxEmbeddings.ts`)
+### Code Block Scoring
+Not all code blocks appear in summaries. Each block is scored and must exceed a threshold:
 
-For deeper semantic understanding, the app leverages **ONNX Runtime (React Native)**.
+```
+CODE_IMPORTANCE_THRESHOLD = 0.30
 
-- **Model**: `all-MiniLM-L6-v2` (quantized to ~23MB for mobile efficiency).
-- **Execution**: Runs directly on the device using mobile CPU/NPU acceleration.
-- **Use Case: Semantic Boundary Detection**:
-    - The app computes vector embeddings for every paragraph.
-    - It calculates a rolling cosine similarity "valley" detector.
-    - When similarity drops significantly below a dynamic threshold (Mean - 0.5 * Std), the system detects a "Topic Shift" and splits the note into a new revision block.
+Score boosters:
+  • Shell/Bash/Terminal commands   → +0.4
+  • Syscalls, SQL, imports         → +0.3
+  • Short concise snippets         → preferred
+  • Long boilerplate               → penalized
+
+COMMAND_LINE_LIMIT = 4 lines → rendered inline (not as fenced block)
+```
 
 ---
 
-## 4. Smart Topic Parsing (`lib/smartTopicParser.ts`)
+## 7. Deep Summarizer (`lib/deepSummarizer.ts`)
 
-The parser serves as the "Orchestrator," deciding how to chunk raw data:
+Powers the extractive fallback for block-level summaries. Generates teacher-style explanations without the LLM.
 
-- **Structural Splits**: Instant triggers for `#`, `##`, `**Bold Line**`, or `ALL CAPS` lines.
-- **Jaccard Similarity Check**: A lightweight statistical check performed before invoking the heavy ONNX model to save battery.
-- **Code Block Importance Scoring**:
-    - Not all code is equal. The app scores blocks based on:
-        - Language (Shell/Bash gets a boost).
-        - Pattern Matching (Syscalls, SQL, Imports).
-        - Length (Concise snippets favored over boilerplate).
-    - Only high-importance code is surfaced in "Study Guides."
+### Explanatory Flow (v2)
+Routes sentences through role classification before assembly:
 
----
+```
+Sentence Roles:
+  definition   → "X is a...", "X refers to...", "X means..."
+  mechanism    → "works by", "operates via", "implements"
+  purpose      → "used for", "allows", "enables", "designed to"
+  property     → "always", "never", "cannot", "must"
+  consequence  → "results in", "causes", "leads to"
+  example      → "for example", "e.g.", "such as"
 
-## 5. Cloud-Scale Intelligence (`lib/aiIntelligence.ts`)
+Assembly Order:
+  definition → mechanism → purpose → property → consequence → example
 
-When a Gemini API key is provided, the app can offload complex analysis:
+Role-matched connectives prevent abrupt jumps between sentences.
+```
 
-- **Engine**: `gemini-1.5-flash` or `gemini-2.0-flash-lite`.
-- **Strategy**: Zero-native-code HTTP implementation.
-- **Custom System Prompt**: Optimized for "Academic Organization," turning chaotic notes into structured JSON models with highly descriptive titles and deep-dive summaries.
+### Replaced v1 Methods
 
----
-
----
-
-## 6. Spaced Repetition Engine: SM-2 Implementation
-
-The "Revision" aspect of the Hub is powered by a custom implementation of the **SuperMemo-2 (SM-2) algorithm**. This governs the adaptive scheduling of revision cards based on user performance.
-
-### The SM-2 Formula
-For every topic card, the system maintains three variables:
-- **Interval ($I$)**: Days until the next revision.
-- **Ease Factor ($EF$)**: Complexity multiplier (default 2.5).
-- **Review Count ($n$)**: Number of successful revisions.
-
-When a user rates a card, the system updates these values:
-
-$$EF' = \max(1.3, EF + (0.1 - (5 - q) \cdot (0.08 + (5 - q) \cdot 0.02)))$$
-*(Simplified in implementation for mobile performance using discrete rating boosts)*
-
-- **Interval progression**:
-  - $I(1) = 1$
-  - $I(2) = 6$ (or $3$ in our mobile-optimized variant)
-  - $I(n) = I(n-1) \cdot EF$
-
-This ensures that cards the user finds "Hard" appear more frequently, while "Easy" concepts are pushed significantly into the future, optimizing long-term retention.
+| v1 Method | Problem | v2 Replacement |
+|---|---|---|
+| `generateOverview()` | Filled keywords into a fixed template | Finds real definition sentence from notes, uses it as opening line |
+| `generateSectionSummary()` | Keyword density → concatenation (no connection) | Routes through `buildExplanatoryFlow()` |
+| `generateCodeExplanation()` | One-line label "The following code defines X" | Reads code AST-lite: extracts function signatures, YAML fields, commands, loops |
+| `generateKeyTakeaways()` | First sentences + "Core concepts: X, Y" | Targets exam content specifically: definitions, distinctions, when-to-use |
 
 ---
 
-## 7. Data Persistence & Integrity
+## 8. Spaced Repetition Engine (SM-2)
 
-To ensure zero-data-loss even during complex AI analysis, the app uses a **Dual-Storage Source-of-Truth** strategy:
+Every topic block is scheduled using a custom SM-2 implementation in `NotesContext`.
 
-1.  **FileSystem Source (Primary)**: AI-generated artifacts, summaries, and full note content are stored as JSON files in `FileSystem.documentDirectory`. This avoids the 2MB-6MB limits of `AsyncStorage` and prevents JSON parse hangs.
-2.  **Metadata Cache (Secondary)**: Fast-access metadata (streaks, theme settings) is mirrored in `AsyncStorage` for instant UI hydration on startup.
-3.  **Atomic Updates**: Every AI extraction result is hashed (DJB2) and checked against the cache before committing to the disk, preventing redundant compute.
+### Variables per Topic
+```typescript
+interface TopicProgress {
+    interval: number;      // Days until next revision
+    easeFactor: number;    // Complexity multiplier (default: 2.5)
+    dueDate: string;       // ISO date string
+    reviewCount: number;   // Successful revisions so far
+    lastRating: 'easy' | 'good' | 'hard' | 'again' | null;
+}
+```
+
+### Update Formula
+$$EF' = \max(1.3, EF + (0.1 - (5 - q)(0.08 + (5 - q) \cdot 0.02)))$$
+
+### Interval Progression
+| Review | Interval |
+|---|---|
+| 1st | 1 day |
+| 2nd | 3 days |
+| n-th | `interval × EF` |
+| Rating: Again | Reset to 1 day |
+
+### Feed Interleaving Algorithm
+```
+Priority weights:
+  'again' rated topics → 3× appearance frequency
+
+Interleaving:
+  1 "Hard/Again" topic : 2 "Regular/Due" topics
+  → prevents overwhelm while keeping difficult content visible
+```
 
 ---
 
-## 8. Intelligent Feed Orchestration
+## 9. Data Persistence & Integrity
 
-Beyond raw extraction, the app uses a **Prioritized Interleaving** logic to maximize retention in the home feed:
+### Dual-Storage Strategy
+| Store | Engine | Data |
+|---|---|---|
+| **Primary** | `expo-file-system` JSON files | Notes, folders, AI summaries, topic cache, bookmarks |
+| **Secondary** | `AsyncStorage` | Theme, streak, settings, haptics preference |
 
--   **Priority Weighting**: Topics rated as "Hard" are given a 3x higher appearance frequency.
--   **Interleaving Algorithm**: The feed engine interleaves 1 "Hard" topic for every 2 "Regular/Due" topics using a randomized pointer-sliding approach. This prevents the user from being overwhelmed by difficult content while ensuring it remains top-of-mind.
--   **AI Summarize Mode**: A global state toggle that switches the entire feed from "Reading Mode" (full block content) to "Digestion Mode" (AI summaries). This uses the secondary summarization pipeline to allow quick scanning of thousands of words in seconds.
+### Why FileSystem over AsyncStorage?
+- AsyncStorage has a 2–6MB per-item limit — large note archives exceed this
+- JSON parse hangs on large payloads were observed
+- FileSystem avoids IPC overhead for large strings
+
+### Cache Integrity
+Every AI artifact is keyed by `djb2Hash(content)`:
+```typescript
+function hashContent(str: string): string {
+    let hash = 5381;
+    for (let i = 0; i < str.length; i++) {
+        hash = ((hash << 5) + hash) ^ str.charCodeAt(i);
+        hash = hash & hash;
+    }
+    return (hash >>> 0).toString(36);
+}
+```
+Hash mismatch → stale cache → regenerate. Prevents serving outdated summaries.
 
 ---
 
-## 9. Technical Performance Metrics
+## 10. Performance Metrics
 
-- **Startup Latency**: < 100ms for structural parsing.
-- **Local Summarization**: ~300-800ms for a 1,000-word document.
-- **Semantic Split (ONNX)**: ~2-4s on modern ARM64 devices (includes embedding generation).
-- **Memory Footprint**: ~40-60MB during active ONNX inference (cleaned up immediately after).
+| Operation | Latency |
+|---|---|
+| Structural parsing | < 10ms |
+| Jaccard semantic shift check | < 50ms |
+| Extractive summarization (BM25+LexRank) | 300–800ms |
+| LLM model load into memory | 3–8 seconds |
+| Block-level LLM summary (512 tokens) | 60–120 seconds |
+| Whole-note LLM summary (512 tokens) | 60–120 seconds |
+| Summary cache read (cached hit) | < 5ms |
 
 ---
 
-*Documentation compiled by Rahul Varanasi — v2.2 AI Engine Architecture*
+## 11. Optional: Cloud Intelligence (`lib/aiIntelligence.ts`)
+
+When a Gemini API key is provided in Settings, the app can optionally use cloud inference:
+
+- **Engine**: `gemini-2.0-flash-lite` (default)
+- **Strategy**: Zero-native-code HTTP fetch — no Google SDK required
+- **System Prompt**: Optimized for academic organization, producing structured JSON with descriptive titles and deep-dive summaries
+- **Privacy note**: Using this mode sends note content to Google's servers
+
+This is an **opt-in secondary path** — the default and primary path remains fully on-device.
+
+---
+
+*Documentation — v2.0 ExecuTorch LLM Architecture*
+*Compiled by Rahul Varanasi — © 2026 All Rights Reserved*
